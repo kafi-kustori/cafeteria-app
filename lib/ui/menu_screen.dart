@@ -98,12 +98,14 @@ class _MenuScreenState extends State<MenuScreen> {
               elevation: 0,
               visualDensity: VisualDensity.compact,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              // The theme paints chips white, so use dark text for contrast.
+              color: const WidgetStatePropertyAll(Colors.white),
+              side: BorderSide.none,
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               label: Text(
                 'Balance: ${_card.balance} Tk',
                 style: const TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF00574B),
                     fontSize: 12,
                     fontWeight: FontWeight.w600),
               ),
