@@ -48,6 +48,24 @@ class _MenuScreenState extends State<MenuScreen> {
   }
 
   Future<void> _doCheckout() async {
+    final total = _bestPrice()?.total ?? 0;
+    if (_cart.isEmpty || total == 0) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Confirm payment'),
+        content: Text('Pay $total Tk from your balance?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel')),
+          FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Pay now')),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     setState(() => _busy = true);
     final result = await _checkout.checkout(_cart);
     if (!mounted) return;
