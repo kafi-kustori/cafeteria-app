@@ -1,4 +1,4 @@
-# Cafeteria Self-Service Ordering App
+# Campus Cafeteria App
 
 A Flutter Web app for the RUET cafeteria. Students log in with their card ID and
 PIN, see the menu with live stock, add items to a cart, and the best offers are
