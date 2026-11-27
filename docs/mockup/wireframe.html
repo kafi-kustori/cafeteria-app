@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RUET Cafeteria - Low-fidelity wireframe</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px;
+    background: #f0f0f0;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    color: #666;
+  }
+  .page { max-width: 1400px; margin: 0 auto; }
+  h1 { margin: 0 0 6px; font-size: 22px; text-align: center; }
+  .note { margin: 0 0 24px; text-align: center; }
+
+  .row { display: flex; justify-content: center; align-items: flex-start; gap: 24px; }
+  figure { margin: 0; width: 380px; }
+  figcaption { font-size: 15px; font-weight: bold; margin-bottom: 8px; }
+
+  .frame {
+    position: relative;
+    width: 380px;
+    height: 720px;
+    background: #fff;
+    border: 2px solid #999;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .screen {
+    position: absolute;
+    inset: 0;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .screen > * { flex-shrink: 0; }
+
+  .x {
+    background:
+      linear-gradient(to bottom right, transparent calc(50% - 1px), #999 calc(50% - 1px), #999 calc(50% + 1px), transparent calc(50% + 1px)),
+      linear-gradient(to bottom left, transparent calc(50% - 1px), #999 calc(50% - 1px), #999 calc(50% + 1px), transparent calc(50% + 1px)),
+      #ddd;
+    border: 1px dashed #999;
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: #ddd;
+    border: 1px solid #999;
+    border-radius: 8px;
+  }
+  .grow { flex: 1; }
+  .bold { font-weight: bold; }
+  .icon { width: 26px; height: 26px; border-radius: 4px; }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #ccc;
+    border: 1px solid #999;
+    border-radius: 999px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background: #fff;
+    border: 1px solid #666;
+    border-radius: 8px;
+    color: #666;
+    font: bold 14px Arial, Helvetica, sans-serif;
+    text-align: center;
+  }
+  .btn.primary { background: #666; color: #fff; }
+  .btn-sm {
+    width: auto;
+    display: inline-block;
+    padding: 4px 8px;
+    background: #fff;
+    border: 1px solid #666;
+    border-radius: 999px;
+    color: #666;
+    font: bold 11px Arial, Helvetica, sans-serif;
+    white-space: nowrap;
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid #bbb;
+    border-radius: 8px;
+    padding: 8px;
+  }
+
+  .item { display: flex; align-items: center; gap: 10px; }
+  .thumb { width: 60px; height: 60px; border-radius: 6px; flex-shrink: 0; }
+  .info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .name { font-weight: bold; font-size: 14px; }
+  .qty { display: flex; align-items: center; gap: 6px; }
+  .qty button {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    background: #fff;
+    border: 1px solid #666;
+    border-radius: 6px;
+    color: #666;
+    font: bold 14px Arial, Helvetica, sans-serif;
+  }
+  .qty span { width: 18px; text-align: center; }
+
+  .cart {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: #eee;
+    border: 1px solid #999;
+    border-radius: 8px;
+  }
+  .pills { display: flex; gap: 8px; }
+  .total { font-size: 18px; font-weight: bold; }
+
+  .dialog {
+    padding: 14px;
+    background: #eee;
+    border: 1px solid #666;
+    border-radius: 10px;
+  }
+  .dtitle { font-weight: bold; font-size: 14px; }
+  .dbtns { display: flex; gap: 8px; margin-top: 12px; }
+  .dbtns .btn { flex: 1; }
+
+  .receipt {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    background: #fff;
+    border: 1px solid #999;
+    border-radius: 8px;
+  }
+  .check {
+    width: 56px;
+    height: 56px;
+    margin: 4px auto 6px;
+    border-radius: 50%;
+    background: #ddd;
+    border: 1px dashed #999;
+    position: relative;
+  }
+  .tick {
+    position: absolute;
+    left: 20px;
+    top: 13px;
+    width: 12px;
+    height: 22px;
+    border-right: 3px solid #666;
+    border-bottom: 3px solid #666;
+    transform: rotate(45deg);
+  }
+  .center { text-align: center; }
+  .dash { border-top: 1px dashed #999; }
+  .paid { font-size: 18px; font-weight: bold; }
+  .receipt .btn { margin-top: 8px; }
+
+  .stats { display: flex; gap: 8px; }
+  .stat {
+    flex: 1;
+    min-height: 56px;
+    padding: 8px;
+    background: #eee;
+    border: 1px dashed #999;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+  .list-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: #fff;
+    border: 1px solid #bbb;
+    border-radius: 8px;
+  }
+  .list { display: flex; flex-direction: column; gap: 6px; }
+  .fab {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    padding: 10px 16px;
+    background: #ccc;
+    border: 1px dashed #666;
+    border-radius: 999px;
+    color: #666;
+    font: bold 14px Arial, Helvetica, sans-serif;
+  }
+
+  .topup { display: flex; flex-direction: column; gap: 8px; padding: 12px; }
+  input {
+    width: 100%;
+    padding: 8px;
+    background: #fff;
+    border: 1px dashed #999;
+    border-radius: 6px;
+    font: 13px Arial, Helvetica, sans-serif;
+    color: #666;
+  }
+  input::placeholder { color: #999; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>RUET Cafeteria - Low-fidelity wireframe</h1>
+  <p class="note">Grey boxes = placeholders. Not the final design.</p>
+
+  <div class="row">
+
+    <figure>
+      <figcaption>1. Menu + Cart</figcaption>
+      <div class="frame">
+        <div class="screen">
+          <div class="bar">
+            <span class="grow">Hi [Student] | Balance: ___ Tk</span>
+            <span class="icon x"></span>
+            <span class="icon x"></span>
+          </div>
+
+          <div class="bold">Menu</div>
+
+          <div class="card item">
+            <div class="thumb x"></div>
+            <div class="info">
+              <div class="name">Item name</div>
+              <div>___ Tk</div>
+              <span class="pill">stock</span>
+            </div>
+            <div class="qty"><button type="button">-</button><span>0</span><button type="button">+</button></div>
+          </div>
+
+          <div class="card item">
+            <div class="thumb x"></div>
+            <div class="info">
+              <div class="name">Item name</div>
+              <div>___ Tk</div>
+              <span class="pill">stock</span>
+            </div>
+            <div class="qty"><button type="button">-</button><span>0</span><button type="button">+</button></div>
+          </div>
+
+          <div class="card item">
+            <div class="thumb x"></div>
+            <div class="info">
+              <div class="name">Item name</div>
+              <div>___ Tk</div>
+              <span class="pill">stock</span>
+            </div>
+            <div class="qty"><button type="button">-</button><span>0</span><button type="button">+</button></div>
+          </div>
+
+          <div class="card item">
+            <div class="thumb x"></div>
+            <div class="info">
+              <div class="name">Item name</div>
+              <div>___ Tk</div>
+              <span class="pill">stock</span>
+            </div>
+            <div class="qty"><button type="button">-</button><span>0</span><button type="button">+</button></div>
+          </div>
+
+          <div class="cart">
+            <div>Subtotal: ___ Tk</div>
+            <div class="pills">
+              <span class="pill">Offer: ___</span>
+              <span class="pill">Offer: ___</span>
+            </div>
+            <div class="total">Total: ___ Tk</div>
+            <button type="button" class="btn primary">Checkout</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption>2. Checkout / Bill</figcaption>
+      <div class="frame">
+        <div class="screen">
+          <div class="dialog">
+            <div class="dtitle">Confirm payment - Pay ___ Tk?</div>
+            <div class="dbtns">
+              <button type="button" class="btn">Cancel</button>
+              <button type="button" class="btn primary">Pay now</button>
+            </div>
+          </div>
+
+          <div class="receipt">
+            <div class="check">
+              <span class="tick"></span>
+            </div>
+            <div class="center bold">Payment successful</div>
+            <div class="center">Bill #___</div>
+            <div class="dash"></div>
+            <div>Item x n = ___ Tk</div>
+            <div>Item x n = ___ Tk</div>
+            <div>Item x n = ___ Tk</div>
+            <div class="dash"></div>
+            <div>Offers: -___ Tk</div>
+            <div class="paid">TOTAL PAID: ___ Tk</div>
+            <div>New balance: ___ Tk</div>
+            <button type="button" class="btn primary">Back to menu</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <figure>
+      <figcaption>3. Admin</figcaption>
+      <div class="frame">
+        <div class="screen">
+          <div class="bar">
+            <span class="grow bold">Cafeteria Admin</span>
+            <span class="icon x"></span>
+            <span class="icon x"></span>
+          </div>
+
+          <div class="stats">
+            <div class="stat">Today's sales ___ Tk</div>
+            <div class="stat">Items ___</div>
+            <div class="stat">Low stock ___</div>
+          </div>
+
+          <div class="list">
+            <div class="list-row">
+              <span class="grow">Item name</span>
+              <span>stock ___</span>
+              <button type="button" class="btn-sm">Restock +10</button>
+            </div>
+            <div class="list-row">
+              <span class="grow">Item name</span>
+              <span>stock ___</span>
+              <button type="button" class="btn-sm">Restock +10</button>
+            </div>
+            <div class="list-row">
+              <span class="grow">Item name</span>
+              <span>stock ___</span>
+              <button type="button" class="btn-sm">Restock +10</button>
+            </div>
+            <div class="list-row">
+              <span class="grow">Item name</span>
+              <span>stock ___</span>
+              <button type="button" class="btn-sm">Restock +10</button>
+            </div>
+          </div>
+
+          <div class="card topup">
+            <div class="bold">Top up a card</div>
+            <input type="text" placeholder="Card ID">
+            <input type="text" placeholder="Amount (Tk)">
+            <button type="button" class="btn primary">Top up</button>
+          </div>
+        </div>
+        <button type="button" class="fab">+ Add item</button>
+      </div>
+    </figure>
+
+  </div>
+</div>
+</body>
+</html>
