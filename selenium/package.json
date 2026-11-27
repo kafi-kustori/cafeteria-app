@@ -1,0 +1,12 @@
+{
+  "name": "cafeteria-selenium-tests",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node cart_total_test.js",
+    "screenshots": "node screenshots.js"
+  },
+  "dependencies": {
+    "selenium-webdriver": "^4.27.0"
+  }
+}

@@ -46,3 +46,6 @@ app.*.map.json
 
 # Local Supabase keys (never commit)
 env.json
+
+# Selenium end-to-end test dependencies
+selenium/node_modules/
