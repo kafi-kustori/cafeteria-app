@@ -7,6 +7,7 @@ import '../domain/offer_factory.dart';
 import '../domain/pricing_engine.dart';
 import '../services/checkout_service.dart';
 import 'bill_screen.dart';
+import 'common_widgets.dart';
 import 'history_screen.dart';
 import 'login_screen.dart';
 
@@ -71,11 +72,44 @@ class _MenuScreenState extends State<MenuScreen> {
     await _reload();
   }
 
+  PriceResult? _bestPrice() {
+    final engine = _engine;
+    if (engine == null) return null;
+    final prices = {for (final i in _menu) i.name: i.price};
+    return engine.bestPrice(_cart.namedQuantities(_menu), prices);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Hi ${_card.name} - Balance: ${_card.balance} Tk'),
+      appBar: GradientAppBar(
+        toolbarHeight: 92,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Hi ${_card.name}',
+              style: const TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.w700, height: 1.2),
+            ),
+            const SizedBox(height: 6),
+            Chip(
+              elevation: 0,
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              label: Text(
+                'Balance: ${_card.balance} Tk',
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             tooltip: 'Order history',
@@ -97,67 +131,324 @@ class _MenuScreenState extends State<MenuScreen> {
       ),
       body: ListenableBuilder(
         listenable: _cart,
-        builder: (context, _) => Column(children: [
-          Expanded(
-            child: ListView(children: [
-              for (final item in _menu) _itemTile(item),
-            ]),
-          ),
-          _summary(),
-        ]),
+        builder: (context, _) {
+          final price = _bestPrice();
+          return Column(
+            children: [
+              Expanded(child: _menuBody()),
+              _summary(price),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _itemTile(MenuItem item) {
-    final inCart = _cart.quantityOf(item.id);
-    final left = item.stock - inCart;
-    return ListTile(
-      title: Text('${item.name} - ${item.price} Tk'),
-      subtitle: Text(item.stock == 0 ? 'SOLD OUT' : '$left left'),
-      trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-        IconButton(
-          tooltip: 'Remove ${item.name}',
-          icon: const Icon(Icons.remove_circle_outline),
-          onPressed: inCart == 0 ? null : () => _cart.remove(item),
-        ),
-        Text('$inCart'),
-        IconButton(
-          tooltip: 'Add ${item.name}',
-          icon: const Icon(Icons.add_circle_outline),
-          onPressed: left <= 0 ? null : () => _cart.add(item),
-        ),
-      ]),
+  Widget _menuBody() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (_menu.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final width = constraints.maxWidth;
+        if (width >= 600) {
+          final columns = width >= 900 ? 3 : 2;
+          return GridView.builder(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              mainAxisExtent: 164,
+            ),
+            itemCount: _menu.length,
+            itemBuilder: (context, index) => _gridCard(_menu[index]),
+          );
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          itemCount: _menu.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 10),
+          itemBuilder: (context, index) => _listCard(_menu[index]),
+        );
+      },
     );
   }
 
-  Widget _summary() {
-    final engine = _engine;
-    if (engine == null || _cart.isEmpty) {
-      return const Padding(
-          padding: EdgeInsets.all(16), child: Text('Your cart is empty'));
-    }
-    final prices = {for (final i in _menu) i.name: i.price};
-    final price = engine.bestPrice(_cart.namedQuantities(_menu), prices);
+  Widget _gridCard(MenuItem item) {
+    final inCart = _cart.quantityOf(item.id);
+    final available = item.stock - inCart;
     return Card(
-      margin: const EdgeInsets.all(12),
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('Subtotal: ${price.subtotal} Tk'),
-          for (final a in price.applied)
-            Text('${a.title} x${a.times}: -${a.saving} Tk'),
-          if (price.billDiscount > 0)
-            Text('${price.billDiscountTitle}: -${price.billDiscount} Tk'),
-          Text('Total: ${price.total} Tk',
-              style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          FilledButton(
-            onPressed: _busy ? null : _doCheckout,
-            child: const Text('Checkout'),
-          ),
-        ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(foodEmoji(item.name),
+                    style: const TextStyle(fontSize: 26)),
+                const Spacer(),
+                StockBadge(stock: item.stock),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              item.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleSmall
+                  ?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${item.price} Tk',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const Spacer(),
+            Row(
+              children: [
+                _counterButton(
+                  tooltip: 'Remove ${item.name}',
+                  icon: Icons.remove,
+                  filled: false,
+                  onPressed: inCart == 0 ? null : () => _cart.remove(item),
+                ),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      '$inCart',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+                _counterButton(
+                  tooltip: 'Add ${item.name}',
+                  icon: Icons.add,
+                  filled: true,
+                  onPressed: available <= 0 ? null : () => _cart.add(item),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _listCard(MenuItem item) {
+    final scheme = Theme.of(context).colorScheme;
+    final inCart = _cart.quantityOf(item.id);
+    final available = item.stock - inCart;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Container(
+              width: 54,
+              height: 54,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: scheme.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(foodEmoji(item.name),
+                  style: const TextStyle(fontSize: 26)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${item.price} Tk',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 6),
+                  StockBadge(stock: item.stock),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            _counterButton(
+              tooltip: 'Remove ${item.name}',
+              icon: Icons.remove,
+              filled: false,
+              onPressed: inCart == 0 ? null : () => _cart.remove(item),
+            ),
+            SizedBox(
+              width: 30,
+              child: Center(
+                child: Text(
+                  '$inCart',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+            _counterButton(
+              tooltip: 'Add ${item.name}',
+              icon: Icons.add,
+              filled: true,
+              onPressed: available <= 0 ? null : () => _cart.add(item),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _counterButton({
+    required String tooltip,
+    required IconData icon,
+    required bool filled,
+    required VoidCallback? onPressed,
+  }) {
+    final style = IconButton.styleFrom(
+      minimumSize: const Size(38, 38),
+      padding: EdgeInsets.zero,
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    );
+    final iconWidget = Icon(icon, size: 18);
+    return filled
+        ? IconButton.filled(
+            tooltip: tooltip,
+            style: style,
+            onPressed: onPressed,
+            icon: iconWidget,
+          )
+        : IconButton.filledTonal(
+            tooltip: tooltip,
+            style: style,
+            onPressed: onPressed,
+            icon: iconWidget,
+          );
+  }
+
+  Widget _summary(PriceResult? price) {
+    final subtotal = price?.subtotal ?? 0;
+    final total = price?.total ?? 0;
+    final applied = price?.applied ?? const <AppliedOffer>[];
+    final billDiscount = price?.billDiscount ?? 0;
+    final textTheme = Theme.of(context).textTheme;
+    final muted = Theme.of(context)
+        .colorScheme
+        .onSurface
+        .withValues(alpha: 0.55);
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 20,
+            offset: const Offset(0, -6),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Subtotal: $subtotal Tk',
+                    style: textTheme.bodyMedium?.copyWith(color: muted),
+                  ),
+                  const Spacer(),
+                  if (_cart.totalCount > 0)
+                    Text(
+                      '${_cart.totalCount} item${_cart.totalCount == 1 ? '' : 's'}',
+                      style: textTheme.bodySmall?.copyWith(color: muted),
+                    ),
+                ],
+              ),
+              if (applied.isNotEmpty || billDiscount > 0) ...[
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final a in applied)
+                      _offerChip(
+                        Icons.local_offer,
+                        '${a.title} x${a.times}  -${a.saving} Tk',
+                      ),
+                    if (billDiscount > 0)
+                      _offerChip(
+                        Icons.percent,
+                        '${price?.billDiscountTitle}: -$billDiscount Tk',
+                      ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 12),
+              Text(
+                'Total: $total Tk',
+                style: textTheme.headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 52,
+                child: FilledButton(
+                  onPressed: (_busy || _cart.isEmpty) ? null : _doCheckout,
+                  child: const Text('Checkout'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _offerChip(IconData icon, String text) {
+    const green = Color(0xFF2E7D32);
+    return Chip(
+      elevation: 0,
+      avatar: Icon(icon, size: 16, color: green),
+      label: Text(
+        text,
+        style: const TextStyle(
+            color: green, fontSize: 12, fontWeight: FontWeight.w600),
+      ),
+      backgroundColor: green.withValues(alpha: 0.10),
+      side: BorderSide.none,
+      visualDensity: VisualDensity.compact,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
     );
   }
 }
