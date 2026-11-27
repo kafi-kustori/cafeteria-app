@@ -103,8 +103,10 @@ async function waitForAny(driver, locators, timeout) {
     await driver.sleep(500);
     await save(driver, '13_menu_total.png');
 
-    // 5. Checkout: bill screen or "not enough balance" dialog
+    // 5. Checkout asks for confirmation first, then shows the bill
+    //    screen or the "not enough balance" dialog
     await click(driver, 'Checkout');
+    await click(driver, 'Pay now');
     const outcome = await waitForAny(
       driver,
       [byTextContaining('TOTAL PAID'), byTextContaining('Not enough balance')],
