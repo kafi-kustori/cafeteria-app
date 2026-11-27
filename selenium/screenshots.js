@@ -31,8 +31,10 @@ if (!ADMIN_ID || !ADMIN_PIN) {
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
+// Fields carry an aria-label; text buttons (e.g. "Log in") are role="button"
+// nodes whose label is their text, so match either one.
 function byLabel(label) {
-  return By.xpath(`//*[@aria-label="${label}"]`);
+  return By.xpath(`//*[@aria-label="${label}" or (@role="button" and normalize-space(.)="${label}")]`);
 }
 
 function byTextContaining(text) {
@@ -48,7 +50,8 @@ async function typeInto(driver, label, text) {
 
 async function click(driver, label) {
   const el = await driver.wait(until.elementLocated(byLabel(label)), 20000);
-  await el.click();
+  // Flutter Web ignores el.click() on semantics nodes; a real pointer click works.
+  await driver.actions().move({ origin: el }).click().perform();
   await driver.sleep(400);
 }
 
